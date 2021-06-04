@@ -52,8 +52,13 @@ export default class SpFxWithNgWebPart extends BaseClientSideWebPart<ISpFxWithNg
 
       this.context.spHttpClient.post(url, SPHttpClient.configurations.v1, spOpts)
         .then((response: SPHttpClientResponse) => {
-          console.log("spPost - spHttpClient.post response", response);
-          resolve(response);
+          console.log("spHttpClient.post", response.status, response);
+
+          //response.json() returns a promise so you get access to the json in the resolve callback.
+          response.json().then((responseJSON: JSON) => {
+            console.log(responseJSON);
+            resolve(responseJSON);
+          });
         })
     })
   }

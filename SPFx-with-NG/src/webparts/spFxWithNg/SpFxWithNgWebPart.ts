@@ -10,6 +10,9 @@ import styles from './SpFxWithNgWebPart.module.scss';
 import * as strings from 'SpFxWithNgWebPartStrings';
 
 
+import { SPHttpClient, SPHttpClientResponse, ISPHttpClientOptions  } from '@microsoft/sp-http';
+
+
 /****  ANGULAR  *****/
 require('./ng files/runtime.js')
 require('./ng files/polyfills.js')
@@ -27,26 +30,32 @@ export interface ISpFxWithNgWebPartProps {
 export default class SpFxWithNgWebPart extends BaseClientSideWebPart<ISpFxWithNgWebPartProps> {
 
   public render(): void {
-    this.domElement.innerHTML = `
-      <div class="${ styles.spFxWithNg }">
-        <div class="${ styles.container }">
-          <div class="${ styles.row }">
-            <div class="${ styles.column }">
-              <span class="${ styles.title }">Welcome to SharePoint!</span>
-              <p class="${ styles.subTitle }">Customize SharePoint experiences using Web Parts.</p>
-              <p class="${ styles.description }">${escape(this.properties.description)}</p>
-              <a href="https://aka.ms/spfx" class="${ styles.button }">
-                <span class="${ styles.label }">Learn more</span>
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>`;
-
-    window['ctx'] = this.context.pageContext
-
+    window['ctx'] = this.context
+    window['spPost'] = this.spPost.bind(this)
     this.domElement.innerHTML = `<app-any-name></app-any-name>`
+  }
 
+  spPost(url:string, payload:object):Promise<any>{
+    return new Promise((resolve, reject) => {
+      const spOpts: ISPHttpClientOptions = {
+        /*body: JSON.stringify({
+          '__metadata': { 'type': 'SP.List' },
+          'BaseTemplate': 100,
+          'Title': listName
+          }),*/
+        body : JSON.stringify(payload),
+        headers: { 
+          'Content-Type': 'application/json;odata=verbose',
+          "Accept": "application/json;odata=verbose",
+        }
+      };
+
+      this.context.spHttpClient.post(url, SPHttpClient.configurations.v1, spOpts)
+        .then((response: SPHttpClientResponse) => {
+          console.log("spPost - spHttpClient.post response", response);
+          resolve(response);
+        })
+    })
   }
 
   protected get dataVersion(): Version {
